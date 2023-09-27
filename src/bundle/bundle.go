@@ -13,6 +13,7 @@ var (
 	CodeUserRepeat = "E-014" // 帳號重複
 	CodeHold       = "E-015" // 不是你的
 	CodeDate       = "E-016" // 查詢日期錯誤
+	CodeCache      = "E-017" // 快取沒資料
 )
 
 // 全部類型

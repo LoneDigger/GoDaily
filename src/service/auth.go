@@ -34,6 +34,7 @@ func (s *Service) checkAuth(c *gin.Context) {
 			c.JSON(http.StatusOK, bundle.ErrorResponse{
 				Code: bundle.CodeToken,
 			})
+			c.Set("code", bundle.CodeToken)
 			c.Abort()
 		} else {
 			if _, ok := s.c.Get(strconv.Itoa(auth.UserId)); ok {
@@ -43,6 +44,7 @@ func (s *Service) checkAuth(c *gin.Context) {
 				c.JSON(http.StatusOK, bundle.ErrorResponse{
 					Code: bundle.CodeToken,
 				})
+				c.Set("code", bundle.CodeCache)
 				c.Abort()
 			}
 		}
