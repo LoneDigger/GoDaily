@@ -23,8 +23,8 @@ const limitCount = 50
 // 過期時間
 const expiredTime = 8 * 60 * 60
 
-const server_url = "http://127.0.0.1:8080"
-const host = "localhost"
+const server_url = "https://godaily.onrender.com"
+const host = "godaily.onrender.com"
 
 type Service struct {
 	a   gin.Accounts
