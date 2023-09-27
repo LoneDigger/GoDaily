@@ -42,7 +42,7 @@ func init() {
 		path := c.Request.URL.Path
 
 		switch {
-		case !strings.HasPrefix(path, "/view"):
+		case !strings.HasPrefix(path, "/public"):
 			endTime := time.Now()
 			latencyTime := endTime.Sub(startTime)
 			reqMethod := c.Request.Method
