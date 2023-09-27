@@ -285,7 +285,7 @@ func (s *Service) login(c *gin.Context) {
 				b.Code = bundle.CodePassword
 			} else {
 				auth := token.NewToken(userId, login.Username, expiredTime*time.Second)
-				c.SetCookie("Authorization", auth, expiredTime, "/", "localhost", false, false)
+				c.SetCookie("Authorization", auth, expiredTime, "/", host, false, false)
 				b.Code = bundle.CodeOk
 
 				s.c.Add(strconv.Itoa(userId), nil, cache.DefaultExpiration)
