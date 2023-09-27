@@ -1,4 +1,4 @@
-const host = "http://localhost:8080";
+const host = "https://godaily.onrender.com";
 axios.defaults.withCredentials = true;
 
 function deleteRequset(url, params) {
