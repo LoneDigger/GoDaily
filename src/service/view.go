@@ -23,6 +23,9 @@ const limitCount = 50
 // 過期時間
 const expiredTime = 8 * 60 * 60
 
+const server_url = "http://127.0.0.1:8080"
+const host = "localhost"
+
 type Service struct {
 	a   gin.Accounts
 	c   *cache.Cache
@@ -55,7 +58,7 @@ func (s *Service) Start() {
 
 	// Access-Control-Allow-Origin
 	s.s.Use(func(ctx *gin.Context) {
-		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:8080")
+		ctx.Writer.Header().Set("Access-Control-Allow-Origin", server_url)
 		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
