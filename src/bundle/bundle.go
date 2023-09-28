@@ -109,7 +109,7 @@ type CreateSubTypeResponse struct {
 // swagger:model CreateItemRequest
 type CreateItemRequest struct {
 	SubId  int    `json:"sub_id" binding:"required" validate:"required,gt=0" swaggertype:"integer" example:"0"`
-	Name   string `json:"name" binding:"required" validate:"required,min=2,max=32" swaggertype:"string" example:"name"`
+	Name   string `json:"name" validate:"required,min=2,max=32" swaggertype:"string" example:"name"`
 	Price  int    `json:"price" binding:"required" validate:"required,gt=0" swaggertype:"integer" example:"100"`
 	Remark string `json:"remark" validate:"required,min=0,max=64" swaggertype:"string" example:""`
 	Date   string `json:"date" binding:"required" time_format:"2006-01-02" example:"2006-01-02"`
