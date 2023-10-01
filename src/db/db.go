@@ -198,7 +198,8 @@ func (d *Db) GetAllType(userId int) ([]bundle.AllType, error) {
 			FROM main_types AS m
 			LEFT JOIN sub_types AS s
 			ON m.id=s.main_id
-			WHERE NOT m.deleted AND NOT s.deleted AND m.user_id=$1`
+			WHERE NOT m.deleted AND NOT s.deleted AND m.user_id=$1
+			ORDER BY main_id, sub_id`
 	err := d.db.Select(&arr, s, userId)
 	if err != nil {
 		err = errors.New(bundle.CodeDb)
@@ -260,8 +261,7 @@ func (d *Db) GetPerviewItemsByDate(userId, limit, offset int, start, end string)
 			LEFT JOIN main_types AS m
 			ON m.id=s.main_id
 			WHERE b.user_id=$1 AND b.date BETWEEN $2 AND $3
-			ORDER BY b.date, b.id
-			--LIMIT $4 OFFSET $5;`
+			ORDER BY b.date, b.id`
 
 	//err := d.db.Select(&items, s, userId, start, end, limit, offset)
 	err := d.db.Select(&items, s, userId, start, end)
@@ -311,7 +311,7 @@ func (d *Db) GetSumByMainType(userId int, start, end string) ([]bundle.MainSumMo
 			LEFT JOIN main_types AS m
 			ON m.id=s.main_id
 			WHERE b.user_id=$1 AND b.date BETWEEN $2 AND $3 AND s.increase<0
-			GROUP BY m.id;`
+			GROUP BY m.id`
 
 	err := d.db.Select(&arr, s, userId, start, end)
 	if err != nil {
@@ -333,7 +333,7 @@ func (d *Db) GetSumByMonth(userId int, start, end string) ([]bundle.Monthly, err
 			ON m.id=s.main_id
 			WHERE b.user_id=$1 AND b.date BETWEEN $2 AND $3
 			GROUP BY DATE_TRUNC('month', b.date)
-			ORDER BY date;`
+			ORDER BY date`
 
 	err := d.db.Select(&items, s, userId, start, end)
 	if err != nil {
