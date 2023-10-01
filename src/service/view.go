@@ -102,6 +102,7 @@ func (s *Service) Start() {
 		gApi.GET("/spend/month/:count", s.getSpendByLastMonthly)
 		gApi.GET("/sum/main", s.getSumByMainType)
 
+		gApi.GET("logout", s.logout)
 		gApi.POST("/login", s.login)
 		gApi.POST("/user", s.createUser)
 		gApi.POST("/main", s.createMainType)

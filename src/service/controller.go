@@ -303,6 +303,19 @@ func (s *Service) login(c *gin.Context) {
 	c.JSON(http.StatusOK, b)
 }
 
+// @Summary 登出
+// @Description 登出
+// @Tags get
+// @Router /api/logout [get]
+func (s *Service) logout(c *gin.Context) {
+	c.SetCookie("Authorization", "", -1, "/", host, false, false)
+
+	c.Set("code", bundle.CodeOk)
+	c.JSON(http.StatusOK, bundle.ErrorResponse{
+		Code: bundle.CodeOk,
+	})
+}
+
 // @Summary 取得全部類別
 // @Description 取得全部類別
 // @Tags get
