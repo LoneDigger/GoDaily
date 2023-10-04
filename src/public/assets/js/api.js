@@ -56,10 +56,9 @@ function removeClass(el, className) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-function showToast(code) {
+function showToast(toast, code) {
   let msg = "";
   let name = "";
-  const toast = $("#toast")[0]
 
   removeClass(toast, "bg-success")
   removeClass(toast, "bg-danger")

@@ -302,7 +302,7 @@
 
       const json = JSON.stringify(form);
       postRequset("/api/item", json).then((response) => {
-        showToast(response.data.code);
+        showToast($(".toast")[0], response.data.code);
       }).catch((err) => {
         // console.log(err);
       });
@@ -363,7 +363,7 @@
 
       const json = JSON.stringify(form);
       putRequset("/api/item", json).then((response) => {
-        showToast(response.data.code);
+        showToast($(".toast")[0], response.data.code);
       }).catch((err) => {
         // console.log(err);
       });
@@ -383,7 +383,7 @@
 
     function deleteItem() {
       deleteRequset("/api/item/" + hashId).then((response) => {
-        showToast(response.data.code);
+        showToast($(".toast")[0], response.data.code);
       }).catch((err) => {
         // console.log(err);
       });

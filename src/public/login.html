@@ -146,11 +146,10 @@
           if (response.data.code == "E-000") {
             location.href = "/public/index.html";
           } else {
-            showToast(response.data.code);
+            showToast($(".toast")[0], response.data.code);
           }
         }).catch((err) => {
           // console.log(err);
-          showToast();
         });
       });
     });
