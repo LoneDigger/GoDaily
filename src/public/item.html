@@ -276,32 +276,6 @@
   <script src="./assets/js/api.js"></script>
 
   <script>
-    function showToast(code) {
-      let msg = "";
-      let name = "";
-      const toast = $("#toast")[0]
-
-      removeClass(toast, "bg-success")
-      removeClass(toast, "bg-danger")
-
-      switch (code) {
-        case "E-000":
-          name = "bg-success";
-          msg = "成功";
-          break;
-        case "E-002":
-          name = "bg-danger";
-          msg = "失敗";
-          break;
-      }
-
-      addClass(toast, name);
-      $("#msgBox").html(msg);
-      const toastPlacementExample = document.querySelector('.toast-placement-ex');
-      const toastPlacement = new bootstrap.Toast(toastPlacementExample);
-      toastPlacement.show();
-    }
-
     var options = new Map();
     var hashId;
 
