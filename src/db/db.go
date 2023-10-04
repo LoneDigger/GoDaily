@@ -228,6 +228,8 @@ func (d *Db) GetAllType(userId int) ([]bundle.AllType, error) {
 		})
 	}
 
+	ats = append(ats, at)
+
 	return ats, err
 }
 

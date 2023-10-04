@@ -127,12 +127,6 @@
   <script src="./assets/js/api.js"></script>
 
   <script>
-    function showToast() {
-      const toastPlacementExample = document.querySelector('.toast-placement-ex');
-      const toastPlacement = new bootstrap.Toast(toastPlacementExample);
-      toastPlacement.show();
-    }
-
     $(document).ready(function () {
       $("#submit").click(function () {
         const username = $("#username").val();
@@ -152,11 +146,10 @@
           if (response.data.code == "E-000") {
             location.href = "/public/index.html";
           } else {
-            showToast();
+            showToast($(".toast")[0], response.data.code);
           }
         }).catch((err) => {
           // console.log(err);
-          showToast();
         });
       });
     });
