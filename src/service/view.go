@@ -23,9 +23,6 @@ const limitCount = 50
 // 過期時間
 const expiredTime = 8 * 60 * 60
 
-const server_url = "http://127.0.0.1:8080"
-const host = "localhost"
-
 type Service struct {
 	a   gin.Accounts
 	c   *cache.Cache
@@ -57,18 +54,18 @@ func (s *Service) Start() {
 	s.s.Use(gin.Recovery(), log.LogHistory.Func)
 
 	// Access-Control-Allow-Origin
-	s.s.Use(func(ctx *gin.Context) {
-		ctx.Writer.Header().Set("Access-Control-Allow-Origin", server_url)
-		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+	s.s.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", c.Request.Host)
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
-		if ctx.Request.Method == "OPTIONS" {
-			ctx.AbortWithStatus(204)
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
 			return
 		}
 
-		ctx.Next()
+		c.Next()
 	})
 
 	// docs.SwaggerInfo.BasePath = "/"
@@ -118,5 +115,5 @@ func (s *Service) Start() {
 		gApi.DELETE("/item/:item_id", s.deleteItem)
 	}
 
-	s.s.Run()
+	s.s.Run(":80")
 }

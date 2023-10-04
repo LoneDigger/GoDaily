@@ -285,7 +285,7 @@ func (s *Service) login(c *gin.Context) {
 				b.Code = bundle.CodePassword
 			} else {
 				auth := token.NewToken(userId, login.Username, expiredTime*time.Second)
-				c.SetCookie("Authorization", auth, expiredTime, "/", host, false, false)
+				c.SetCookie("Authorization", auth, expiredTime, "/", c.Request.Host, false, false)
 				b.Code = bundle.CodeOk
 
 				s.c.Add(strconv.Itoa(userId), nil, cache.DefaultExpiration)
@@ -308,7 +308,7 @@ func (s *Service) login(c *gin.Context) {
 // @Tags get
 // @Router /api/logout [get]
 func (s *Service) logout(c *gin.Context) {
-	c.SetCookie("Authorization", "", -1, "/", host, false, false)
+	c.SetCookie("Authorization", "", -1, "/", c.Request.Host, false, false)
 
 	c.Set("code", bundle.CodeOk)
 	c.JSON(http.StatusOK, bundle.ErrorResponse{
