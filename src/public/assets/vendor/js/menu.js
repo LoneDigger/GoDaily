@@ -110,7 +110,7 @@
       function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
       function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
 
-      var TRANSITION_EVENTS = ['transitionend', 'webkitTransitionEnd', 'oTransitionEnd']; 
+      var TRANSITION_EVENTS = ['transitionend', 'webkitTransitionEnd', 'oTransitionEnd'];
 
       var Menu = /*#__PURE__*/function () {
         function Menu(el) {
@@ -145,7 +145,7 @@
             window.Helpers.menuPsScroll = this._scrollbar;
           } else {
             el.querySelector('.menu-inner').classList.add('overflow-auto');
-          } 
+          }
 
           var menuClassList = el.classList;
 
@@ -156,7 +156,7 @@
           }
 
           el.setAttribute('data-bg-class', this._menuBgClass);
-          this._bindEvents(); 
+          this._bindEvents();
           el.menuInstance = this;
         }
 
@@ -301,7 +301,7 @@
                     for (var i = 0, l = opened.length; i < l; i++) {
                       opened[i].classList.remove('open');
                     }
-                  } 
+                  }
 
                   _this3._onClosed && _this3._onClosed(_this3, item, toggleLink, Menu._findMenu(item));
                 }
@@ -645,7 +645,7 @@
 
             if (!menu) throw new Error('Cannot find `.menu-sub` element for the current `.menu-toggle`');
             return menu;
-          } 
+          }
         }, {
           key: "_hasClass",
           value: function _hasClass(cls) {
