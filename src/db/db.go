@@ -32,7 +32,7 @@ type Db struct {
 }
 
 func NewDb(host, user, password, dbname string) *Db {
-	connect := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", host, 5432, user, password, dbname)
+	connect := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, 5432, user, password, dbname)
 
 	db, err := sqlx.Connect("postgres", connect)
 	if err != nil {
@@ -45,18 +45,74 @@ func NewDb(host, user, password, dbname string) *Db {
 }
 
 // 確認子類別持有者
-func (d *Db) checkSub(userId, subId int) (bool, error) {
-	s := `SELECT COUNT(1) FROM main_types AS m
-			LEFT JOIN sub_types AS s
-			ON s.main_id=m.id
-			WHERE user_id=$1 AND s.id=$2`
+func (d *Db) checkSub(userId, subId int) error {
+	s := `SELECT COUNT(1) FROM sub_types
+			WHERE user_id=$1 AND id=$2 AND NOT deleted`
 	count := 0
 	err := d.db.QueryRow(s, userId, subId).Scan(&count)
 	if err != nil {
-		return false, errors.New(bundle.CodeDb)
+		return errors.New(bundle.CodeDb)
 	}
 
-	return count == 1, nil
+	if count == 1 {
+		return nil
+	}
+	return errors.New(bundle.CodeHold)
+}
+
+// 確認主類別名稱有無重複
+func (d *Db) checkMainTypeName(userId int, name string) error {
+	s := `SELECT COUNT(1) 
+			FROM main_types
+			WHERE user_id=$1 AND name=$2 AND NOT deleted`
+	count := 0
+	err := d.db.QueryRow(s, userId, name).Scan(&count)
+	if err != nil {
+		return errors.New(bundle.CodeDb)
+	}
+
+	if count == 0 {
+		return nil
+	}
+
+	return errors.New(bundle.CodeTypeRepeat)
+}
+
+// 確認主類別名持有者
+func (d *Db) checkMainTypeOwner(userId, mainId int) error {
+	s := `SELECT COUNT(1) 
+			FROM main_types 
+			WHERE user_id=$1 AND id=$2 AND NOT deleted`
+	count := 0
+
+	err := d.db.QueryRow(s, userId, mainId).Scan(&count)
+	if err != nil {
+		return errors.New(bundle.CodeDb)
+	}
+
+	if count == 1 {
+		return nil
+	}
+
+	return errors.New(bundle.CodeHold)
+}
+
+// 確認子類別名稱有無重複
+func (d *Db) checkSubTypeName(userId int, name string) error {
+	s := `SELECT COUNT(1)
+			FROM sub_types
+            WHERE user_id=$1 AND name=$2 AND NOT deleted`
+	count := 0
+	err := d.db.QueryRow(s, userId, name).Scan(&count)
+	if err != nil {
+		return errors.New(bundle.CodeDb)
+	}
+
+	if count == 0 {
+		return nil
+	}
+
+	return errors.New(bundle.CodeTypeRepeat)
 }
 
 // 建立主類別
@@ -79,8 +135,9 @@ func createMain(tx *sqlx.Tx, userId int) ([]int, error) {
 }
 
 // 建立子類別
-func createSub(tx *sqlx.Tx, mainIds []int) error {
+func createSub(tx *sqlx.Tx, userId int, mainIds []int) error {
 	type tmp struct {
+		UserId   int `db:"user_id"`
 		MainId   int `db:"main_id"`
 		Name     string
 		Increase int
@@ -100,8 +157,8 @@ func createSub(tx *sqlx.Tx, mainIds []int) error {
 			m[p].Increase = increase
 		}
 
-		s := `INSERT INTO sub_types (main_id, name, increase) 
-				VALUES (:main_id, :name, :increase)`
+		s := `INSERT INTO sub_types (user_id, main_id, name, increase) 
+				VALUES (:user_id, :main_id, :name, :increase)`
 		_, err := tx.NamedExec(s, m)
 		if err != nil {
 			return errors.New(bundle.CodeDb)
@@ -126,7 +183,8 @@ func (d *Db) CreateUser(username, password string) (int, error) {
 	if count == 0 {
 		var userId int
 		s = `INSERT INTO users (username, password) 
-				VALUES ($1, $2) RETURNING id`
+				VALUES ($1, $2)
+				RETURNING id`
 		err = tx.QueryRow(s, username, password).Scan(&userId)
 		if err != nil {
 			return -1, errors.New(bundle.CodeDb)
@@ -137,7 +195,7 @@ func (d *Db) CreateUser(username, password string) (int, error) {
 			return -1, err
 		}
 
-		if err = createSub(tx, mainIds); err != nil {
+		if err = createSub(tx, userId, mainIds); err != nil {
 			return -1, err
 		}
 
@@ -149,38 +207,54 @@ func (d *Db) CreateUser(username, password string) (int, error) {
 }
 
 // 刪除帳單項目
-func (d *Db) DeleteItem(userId, id int) (err error) {
-	s := `DELETE FROM bills where id=$1 AND user=$2`
-	_, err = d.db.Exec(s, id, userId)
+func (d *Db) DeleteItem(userId, id int) error {
+	s := `DELETE FROM bills WHERE user_id=$1 AND id=$2`
+	r, err := d.db.Exec(s, userId, id)
 	if err != nil {
 		return errors.New(bundle.CodeDb)
 	}
 
-	return
+	row, _ := r.RowsAffected()
+
+	if row == 0 {
+		return errors.New(bundle.CodeNoData)
+	}
+
+	return nil
 }
 
 // 刪除主類型
-func (d *Db) DeleteMainType(userId, id int) (err error) {
-	s := `UPDATE main_types SET deleted=true WHERE id=$1 AND user_id=$2`
-	_, err = d.db.Exec(s, id, userId)
+func (d *Db) DeleteMainType(userId, id int) error {
+	s := `UPDATE main_types SET deleted=true WHERE user_id=$1 AND id=$2 AND NOT deleted`
+	r, err := d.db.Exec(s, userId, id)
 	if err != nil {
 		return errors.New(bundle.CodeDb)
 	}
 
-	return
+	row, _ := r.RowsAffected()
+
+	if row == 0 {
+		return errors.New(bundle.CodeNoData)
+	}
+
+	return nil
 }
 
 // 刪除子類型
 func (d *Db) DeleteSubType(userId, id int) (err error) {
-	s := `UPDATE sub_types AS s SET deleted=true 
-			FROM main_types AS m 
-			WHERE s.main_id=m.id AND s.id=$1 AND m.user_id=$2`
-	_, err = d.db.Exec(s, id, userId)
+	s := `UPDATE sub_types SET deleted=true WHERE user_id=$1 AND id=$2 AND NOT deleted`
+	r, err := d.db.Exec(s, userId, id)
 	if err != nil {
 		return errors.New(bundle.CodeDb)
 	}
 
-	return
+	row, _ := r.RowsAffected()
+
+	if row == 0 {
+		return errors.New(bundle.CodeNoData)
+	}
+
+	return nil
 }
 
 // 取得全部類別
@@ -198,7 +272,7 @@ func (d *Db) GetAllType(userId int) ([]bundle.AllType, error) {
 			FROM main_types AS m
 			LEFT JOIN sub_types AS s
 			ON m.id=s.main_id
-			WHERE NOT m.deleted AND NOT s.deleted AND m.user_id=$1
+			WHERE m.user_id=$1 AND s.user_id=$1
 			ORDER BY main_id, sub_id`
 	err := d.db.Select(&arr, s, userId)
 	if err != nil {
@@ -241,18 +315,22 @@ func (d *Db) GetItem(userId, itemId int) (bundle.Item, error) {
 			FROM bills AS b
 			LEFT JOIN sub_types AS s
 			ON s.id=b.sub_id
-			WHERE user_id=$1 AND b.id=$2`
+			WHERE b.user_id=$1 AND b.id=$2`
 
 	err := d.db.Get(&item, s, userId, itemId)
 	if err != nil {
-		err = errors.New(bundle.CodeDb)
+		if err == sql.ErrNoRows {
+			err = errors.New(bundle.CodeNoData)
+		} else {
+			err = errors.New(bundle.CodeDb)
+		}
 	}
 
 	return item, err
 }
 
 // 用日期取得預覽項目
-func (d *Db) GetPerviewItemsByDate(userId, limit, offset int, start, end string) ([]bundle.PreviewItem, error) {
+func (d *Db) GetPerviewItemsByDate(userId int, start, end string) ([]bundle.PreviewItem, error) {
 	var items []bundle.PreviewItem
 
 	s := `SELECT b.id, m.name AS "main_name", s.name AS "sub_name", b.name, 
@@ -265,7 +343,6 @@ func (d *Db) GetPerviewItemsByDate(userId, limit, offset int, start, end string)
 			WHERE b.user_id=$1 AND b.date BETWEEN $2 AND $3
 			ORDER BY b.date, b.id`
 
-	//err := d.db.Select(&items, s, userId, start, end, limit, offset)
 	err := d.db.Select(&items, s, userId, start, end)
 	if err != nil {
 		err = errors.New(bundle.CodeDb)
@@ -279,7 +356,8 @@ func (d *Db) GetMainType(userId int) ([]bundle.Main, error) {
 	arr := make([]bundle.Main, 0)
 	s := `SELECT id, name 
 			FROM main_types 
-			WHERE NOT deleted AND user_id=$1 ORDER BY id`
+			WHERE NOT deleted AND user_id=$1
+			ORDER BY id`
 	err := d.db.Select(&arr, s, userId)
 	if err != nil {
 		err = errors.New(bundle.CodeDb)
@@ -291,9 +369,10 @@ func (d *Db) GetMainType(userId int) ([]bundle.Main, error) {
 // 取得子類別
 func (d *Db) GetSubType(userId, main_id int) ([]bundle.Sub, error) {
 	arr := make([]bundle.Sub, 0)
-	s := `SELECT s.id, s.name, s.increase > 0 AS increase
-			FROM sub_types AS s LEFT JOIN main_types AS m ON s.main_id=m.id 
-			WHERE NOT s.deleted AND m.user_id=$1 AND s.main_id=$2 ORDER BY s.id`
+	s := `SELECT id, name, increase>0 AS increase
+			FROM sub_types
+			WHERE NOT deleted AND user_id=$1 AND main_id=$2 
+			ORDER BY id`
 	err := d.db.Select(&arr, s, userId, main_id)
 	if err != nil {
 		err = errors.New(bundle.CodeDb)
@@ -347,13 +426,9 @@ func (d *Db) GetSumByMonth(userId int, start, end string) ([]bundle.Monthly, err
 
 // 新增帳單項目
 func (d *Db) InsertItem(userId int, name string, subId int, price int, remark, date string) error {
-	b, err := d.checkSub(userId, subId)
+	err := d.checkSub(userId, subId)
 	if err != nil {
 		return err
-	}
-
-	if !b {
-		return errors.New(bundle.CodeHold)
 	}
 
 	s := `INSERT INTO bills (user_id, name, sub_id, price, remark, date) 
@@ -368,10 +443,15 @@ func (d *Db) InsertItem(userId int, name string, subId int, price int, remark, d
 
 // 新增主類型
 func (d *Db) InsertMainType(userId int, name string) (int, error) {
+	err := d.checkMainTypeName(userId, name)
+	if err != nil {
+		return 0, err
+	}
+
 	var id int
 	s := `INSERT INTO main_types (user_id, name) 
 			VALUES ($1, $2) RETURNING id`
-	err := d.db.QueryRow(s, userId, name).Scan(&id)
+	err = d.db.QueryRow(s, userId, name).Scan(&id)
 	if err != nil {
 		return 0, errors.New(bundle.CodeDb)
 	}
@@ -381,22 +461,26 @@ func (d *Db) InsertMainType(userId int, name string) (int, error) {
 
 // 新增子類型
 func (d *Db) InsertSubType(userId, mainId int, subName string, increase bool) (int, error) {
+	err := d.checkMainTypeOwner(userId, mainId)
+	if err != nil {
+		return 0, err
+	}
+
+	err = d.checkSubTypeName(userId, subName)
+	if err != nil {
+		return 0, err
+	}
+
 	i := -1
 	if increase {
 		i = 1
 	}
 
-	s := `SELECT COUNT(*) FROM main_types WHERE user_id=$1 AND id=$2 AND NOT deleted`
-	count := 0
-	err := d.db.QueryRow(s, userId, mainId).Scan(&count)
-	if err != nil {
-		return 0, errors.New(bundle.CodeHold)
-	}
-
 	var id int
-	s = `INSERT INTO sub_types (name, main_id, increase) 
-			VALUES ($1, $2, $3) RETURNING id`
-	err = d.db.QueryRow(s, subName, mainId, i).Scan(&id)
+	s := `INSERT INTO sub_types (name, user_id, main_id, increase) 
+			VALUES ($1, $2, $3, $4)
+			RETURNING id`
+	err = d.db.QueryRow(s, subName, userId, mainId, i).Scan(&id)
 	if err != nil {
 		return 0, errors.New(bundle.CodeDb)
 	}
@@ -425,51 +509,76 @@ func (d *Db) Login(username string) (int, string, error) {
 
 // 更新帳單項目
 func (d *Db) UpdateItem(userId, itemId int, name string, subId int, price int, remark, date string) error {
-	b, err := d.checkSub(userId, subId)
+	err := d.checkSub(userId, subId)
 	if err != nil {
 		return err
 	}
 
-	if !b {
+	s := `UPDATE bills SET name=$1, sub_id=$2, price=$3, remark=$4, date=$7
+			WHERE user_id=$5 AND id=$6`
+	r, err := d.db.Exec(s, name, subId, price, remark, userId, itemId, date)
+	if err != nil {
 		return errors.New(bundle.CodeHold)
 	}
 
-	s := `UPDATE bills SET name=$1, sub_id=$2, price=$3, remark=$4, date=$7, updated=CURRENT_TIMESTAMP
-			WHERE user_id=$5 AND id=$6`
-	_, err = d.db.Exec(s, name, subId, price, remark, userId, itemId, date)
-	if err != nil {
-		return errors.New(bundle.CodeHold)
+	row, _ := r.RowsAffected()
+
+	if row == 0 {
+		return errors.New(bundle.CodeNoData)
 	}
 
 	return nil
 }
 
 // 更新主類型
-func (d *Db) UpdateMainType(userId, id int, name string) (err error) {
-	s := `UPDATE main_types SET name=$1, updated=CURRENT_TIMESTAMP
+func (d *Db) UpdateMainType(userId, id int, name string) error {
+	err := d.checkMainTypeName(userId, name)
+	if err != nil {
+		return err
+	}
+
+	s := `UPDATE main_types 
+			SET name=$1
 			WHERE id=$2 AND user_id=$3`
-	_, err = d.db.Exec(s, name, id, userId)
+	r, err := d.db.Exec(s, name, id, userId)
 	if err != nil {
 		return errors.New(bundle.CodeDb)
 	}
 
-	return
+	row, _ := r.RowsAffected()
+
+	if row == 0 {
+		return errors.New(bundle.CodeNoData)
+	}
+
+	return nil
 }
 
 // 更新子類型
-func (d *Db) UpdateSubType(userId, id int, name string, increase bool) (err error) {
+func (d *Db) UpdateSubType(userId, subId int, name string, increase bool) error {
+	err := d.checkSubTypeName(userId, name)
+	if err != nil {
+		return err
+	}
+
 	i := -1
 	if increase {
 		i = 1
 	}
 
-	s := `UPDATE sub_types s SET name=$1, increase=$2, updated=CURRENT_TIMESTAMP
-			FROM main_types m
-			WHERE m.id=s.main_id AND s.id=$3 AND m.user_id=$4`
-	_, err = d.db.Exec(s, name, i, id, userId)
+	s := `UPDATE sub_types
+			SET name=$1, increase=$2
+			WHERE id=$3 AND user_id=$4`
+	r, err := d.db.Exec(s, name, i, subId, userId)
 	if err != nil {
 		return errors.New(bundle.CodeDb)
 	}
 
-	return
+	row, _ := r.RowsAffected()
+
+	if row == 0 {
+		return errors.New(bundle.CodeNoData)
+	}
+
+	return nil
 }

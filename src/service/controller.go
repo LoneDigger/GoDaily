@@ -412,7 +412,7 @@ func (s *Service) getItems(c *gin.Context) {
 		return
 	}
 
-	items, err := s.d.GetPerviewItemsByDate(userId, limitCount, 0, startStr, endStr)
+	items, err := s.d.GetPerviewItemsByDate(userId, startStr, endStr)
 	if err != nil {
 		b.Code = err.Error()
 	} else {

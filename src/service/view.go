@@ -17,9 +17,6 @@ import (
 // 日期格式
 const dateFormat = "2006-01-02"
 
-// 限制資料長度
-const limitCount = 50
-
 // 過期時間
 const expiredTime = 8 * 60 * 60
 

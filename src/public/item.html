@@ -304,12 +304,13 @@
       postRequset("/api/item", json).then((response) => {
         showToast($(".toast")[0], response.data.code);
       }).catch((err) => {
-        // console.log(err);
       });
     }
 
     function getItem() {
       getRequset("/api/item/" + hashId).then((response) => {
+        showToast($(".toast")[0], response.data.code);
+
         if (response.data.code == "E-000") {
           const item = response.data.item;
           $('#nameTextField').val(item.name);
@@ -335,7 +336,6 @@
           }
         }
       }).catch((err) => {
-        // console.log(err);
       });
     }
 
@@ -365,7 +365,6 @@
       putRequset("/api/item", json).then((response) => {
         showToast($(".toast")[0], response.data.code);
       }).catch((err) => {
-        // console.log(err);
       });
     }
 
@@ -385,13 +384,14 @@
       deleteRequset("/api/item/" + hashId).then((response) => {
         showToast($(".toast")[0], response.data.code);
       }).catch((err) => {
-        // console.log(err);
       });
     }
 
     // 全部分類
     function getAllType() {
       getRequset("/api/all").then((response) => {
+        showToast($(".toast")[0], response.data.code);
+
         if (response.data.code == "E-000") {
           options.clear();
 
@@ -417,7 +417,6 @@
           handleHash();
         }
       }).catch((err) => {
-        // console.log(err);
       });
     }
 
