@@ -42,6 +42,18 @@
 </head>
 
 <body>
+  <!-- Toast with Placements -->
+  <div id="toast" class="bs-toast toast toast-placement-ex m-2 bottom-0 end-0 fade hide" role="alert"
+    aria-live="assertive" aria-atomic="true" data-delay="2000">
+    <div class="toast-header">
+      <i class="bx bx-bell me-2"></i>
+      <div id="msgBox" class="me-auto fw-semibold"></div>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body"></div>
+  </div>
+  <!-- Toast with Placements -->
+
   <!-- Layout wrapper -->
   <div class="layout-wrapper layout-content-navbar">
     <div class="layout-container">
@@ -250,12 +262,13 @@
 
       const json = JSON.stringify(form);
       postRequset("/api/main", json).then((response) => {
+        showToast($(".toast")[0], response.data.code);
+
         if (response.data.code == "E-000") {
           options.set(response.data.main_id, response.data.name);
           updateView();
         }
       }).catch((err) => {
-        // console.log(err);
       });
     }
 
@@ -264,12 +277,13 @@
       const mainId = parseInt(mainStr);
 
       deleteRequset("/api/main/" + mainId).then((response) => {
+        showToast($(".toast")[0], response.data.code);
+
         if (response.data.code == "E-000") {
           options.delete(mainId);
           updateView();
         }
       }).catch((err) => {
-        // console.log(err);
       });
     }
 
@@ -288,12 +302,13 @@
 
       const json = JSON.stringify(form);
       putRequset("/api/main", json).then((response) => {
+        showToast($(".toast")[0], response.data.code);
+
         if (response.data.code == "E-000") {
           options.set(mainId, text);
           updateView();
         }
       }).catch((err) => {
-        // console.log(err);
       });
     }
 
@@ -310,7 +325,6 @@
           updateView();
         }
       }).catch((err) => {
-        // console.log(err);
       });
     }
 

@@ -89,12 +89,22 @@ function showToast(toast, code) {
     case "E-013":
     case "E-017":
       location.href = '/public/login.html';
-      break;
+      return;
 
     case "E-014":
       name = "bg-danger";
       msg = "該帳號已被註冊";
       break;
+
+    case "E-018":
+      name = "bg-danger";
+      msg = "名稱已重複";
+      break;
+
+      case "E-019":
+        name = "bg-danger";
+        msg = "更新失敗";
+        break;
   }
 
   addClass(toast, name);

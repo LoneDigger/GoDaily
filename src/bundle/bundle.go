@@ -14,6 +14,8 @@ var (
 	CodeHold       = "E-015" // 不是你的
 	CodeDate       = "E-016" // 查詢日期錯誤
 	CodeCache      = "E-017" // 快取沒資料
+	CodeTypeRepeat = "E-018" // 類別名稱重複
+	CodeNoData     = "E-019" // 沒有資料
 )
 
 // 全部類型
