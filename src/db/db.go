@@ -333,7 +333,8 @@ func (d *Db) GetItem(userId, itemId int) (bundle.Item, error) {
 func (d *Db) GetPerviewItemsByDate(userId int, start, end string) ([]bundle.PreviewItem, error) {
 	var items []bundle.PreviewItem
 
-	s := `SELECT b.id, m.name AS "main_name", s.name AS "sub_name", b.name, 
+	s := `SELECT b.id, m.id AS "main_id", m.name AS "main_name", 
+				s.id AS "sub_id", s.name AS "sub_name", b.name, 
 				b.price, s.increase, TO_CHAR(b.date, 'yyyy-mm-dd') AS "date"
 			FROM bills AS b
 			LEFT JOIN sub_types AS s

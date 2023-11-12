@@ -416,19 +416,8 @@ func (s *Service) getItems(c *gin.Context) {
 	if err != nil {
 		b.Code = err.Error()
 	} else {
-		l := len(items)
 		b.Code = bundle.CodeOk
-		b.List = make([]bundle.PreviewItem, l)
-
-		for i := 0; i < l; i++ {
-			b.List[i].Id = items[i].Id
-			b.List[i].MainName = items[i].MainName
-			b.List[i].SubName = items[i].SubName
-			b.List[i].Name = items[i].Name
-			b.List[i].Price = items[i].Price
-			b.List[i].Increase = items[i].Increase
-			b.List[i].Date = items[i].Date
-		}
+		b.List = items
 	}
 
 	c.Set("code", b.Code)

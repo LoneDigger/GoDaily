@@ -12,8 +12,6 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-// swagger embed files
-
 // 日期格式
 const dateFormat = "2006-01-02"
 

@@ -55,7 +55,9 @@ type Item struct {
 // 預覽項目
 type PreviewItem struct {
 	Id       int    `json:"id" db:"id"`
+	MainId   int    `json:"main_id" db:"main_id"`
 	MainName string `json:"main_name" db:"main_name"`
+	SubId    int    `json:"sub_id" db:"sub_id"`
 	SubName  string `json:"sub_name" db:"sub_name"`
 	Name     string `json:"name" db:"name"`
 	Increase int    `json:"increase" db:"increase"`

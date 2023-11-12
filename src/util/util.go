@@ -1,9 +1,6 @@
 package util
 
 import (
-	"encoding/base64"
-
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -17,9 +14,4 @@ func CheckPasswordHash(password, hash string) bool {
 func HashPassword(password string) string {
 	bytes, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes)
-}
-
-func NewCookie() string {
-	value := uuid.New()
-	return base64.StdEncoding.EncodeToString(value[:])
 }

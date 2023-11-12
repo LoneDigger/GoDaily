@@ -142,12 +142,13 @@
         const json = JSON.stringify(form);
 
         postRequset("/api/login", json).then((response) => {
-          if (response.data.code == "E-000") {
+          if (response.data.code == API_OK) {
             location.href = "/public/index.html";
           } else {
             showToast($(".toast")[0], response.data.code);
           }
         }).catch((err) => {
+          showToast($(".toast")[0], err.code);
         });
       });
     });
