@@ -1,3 +1,5 @@
+const API_OK = "E-000"
+
 axios.defaults.withCredentials = true;
 
 function deleteRequset(url, params) {
@@ -64,7 +66,7 @@ function showToast(toast, code) {
   removeClass(toast, "bg-danger")
 
   switch (code) {
-    case "E-000":
+    case API_OK:
       name = "bg-success";
       msg = "成功";
       break;
@@ -101,10 +103,15 @@ function showToast(toast, code) {
       msg = "名稱已重複";
       break;
 
-      case "E-019":
-        name = "bg-danger";
-        msg = "更新失敗";
-        break;
+    case "E-019":
+      name = "bg-danger";
+      msg = "更新失敗";
+      break;
+
+    default:
+      name = "bg-danger";
+      msg = code;
+      break;
   }
 
   addClass(toast, name);
