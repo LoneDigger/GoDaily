@@ -199,6 +199,7 @@ function updateSumByMonth(sum, month) {
   };
 
   const incomeChart = document.querySelector("#incomeChart");
+  incomeChart.innerHTML = '';
   const chart = new ApexCharts(incomeChart, incomeChartConfig);
   chart.render();
 }
@@ -279,6 +280,7 @@ function updateSumByMainType(sum, name) {
   };
 
   const doughnutChart = document.querySelector("#doughnutChart");
+  doughnutChart.innerHTML = '';
   const chart = new ApexCharts(doughnutChart, doughnutChartConfig);
   chart.render();
 }

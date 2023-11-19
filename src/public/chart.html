@@ -335,6 +335,7 @@
 
       let tempDate = "";
       let tempSum = 0;
+      let flag = true;
       for (var i = 0; i < list.length; i++) {
         let date = Date.parse(list[i].date);
 
@@ -354,13 +355,24 @@
           tempDate = str;
         }
 
-        if (filterType.has(list[i].sub_id))
+        if (filterType.has(list[i].sub_id)) {
           tempSum += list[i].price * list[i].increase;
+          if (list[i].increase > 0) {
+            flag = false;
+          }
+        }
       }
 
       sum.push(tempSum);
       month.push(tempDate);
 
+      if (flag) {
+        for (var o = 0; o < sum.length; o++) {
+          sum[o] = Math.abs(sum[o]);
+        }
+      }
+
+      // 顯示曲線圖
       updateSumByMonth(sum, month);
     }
 
