@@ -214,6 +214,23 @@
               </div>
             </div>
 
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card mb-4">
+                  <h5 class="card-header">主類別總和</h5>
+                  <hr class="my-0" />
+                  <div class="card-body">
+
+                    <div class="row">
+                      <div class="mt-2">
+                        <div id="doughnutChart"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
           <!-- / Content -->
 
@@ -254,7 +271,10 @@
 
   <script>
     var list;
+    // 已選擇分類
     const filterType = new Set();
+    // 主類別名稱
+    const mainTypeName = new Map();
 
     function getList() {
       const startDate = $("#startDate").val();
@@ -288,9 +308,11 @@
           for (var i = 0; i < response.data.list.length; i++) {
             const item = response.data.list[i];
             let children = new Array();
+            mainTypeName.set(item.id, item.name);
 
             for (var o = 0; o < item.subs.length; o++) {
               const s = item.subs[o];
+
               children.push({
                 "id": item.id + "-" + s.id,
                 "text": s.name,
@@ -330,6 +352,12 @@
 
     // 分類
     function getSearch() {
+      showLineChart();
+      showPieChart();
+    }
+
+    // 折線圖
+    function showLineChart() {
       let sum = new Array();
       let month = new Array();
 
@@ -374,6 +402,33 @@
 
       // 顯示曲線圖
       updateSumByMonth(sum, month);
+    }
+
+    // 圓餅圖
+    function showPieChart() {
+      let hashMap = new Map();
+
+      for (var i = 0; i < list.length; i++) {
+        const item = list[i];
+
+        if (filterType.has(item.sub_id)) {
+          let price = item.price;
+          if (hashMap.has(item.main_id)) {
+            price += hashMap.get(item.main_id);
+          }
+          hashMap.set(item.main_id, price);
+        }
+      }
+
+      let arrayName = new Array();
+      let arraySum = new Array();
+
+      hashMap.forEach((values, keys) => {
+        arrayName.push(mainTypeName.get(keys));
+        arraySum.push(values);
+      })
+
+      updateSumByMainType(arraySum, arrayName);
     }
 
     $(document).ready(function () {
