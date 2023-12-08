@@ -404,7 +404,7 @@ func (s *Service) getItems(c *gin.Context) {
 	}
 
 	// 查詢區間
-	shiftTime := startDate.AddDate(30, 0, 0)
+	shiftTime := startDate.AddDate(5, 0, 0)
 	if endDate.After(shiftTime) {
 		b.Code = bundle.CodeDate
 		c.Set("code", b.Code)
@@ -412,7 +412,14 @@ func (s *Service) getItems(c *gin.Context) {
 		return
 	}
 
-	items, err := s.d.GetPerviewItemsByDate(userId, startStr, endStr)
+	var items []bundle.PreviewItem
+	content := c.Query("content")
+	if len(content) == 0 {
+		items, err = s.d.GetPerviewItemsByDate(userId, startStr, endStr)
+	} else {
+		items, err = s.d.LikeName(userId, content, startStr, endStr)
+	}
+
 	if err != nil {
 		b.Code = err.Error()
 	} else {
@@ -496,17 +503,18 @@ func (s *Service) getSpendByLastMonthly(c *gin.Context) {
 	} else {
 		now := time.Now()
 		tmpDate := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+		// 月底
 		endDate := tmpDate.AddDate(0, 1, -1)
-		start := now.AddDate(0, 1-count, 0)
-		startDate := time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, time.UTC)
-		m, err := s.d.GetSumByMonth(userId, startDate.Format(dateFormat), endDate.Format(dateFormat))
+		// 月初
+		start := tmpDate.AddDate(0, -count, 0)
+		m, err := s.d.GetSumByMonth(userId, start.Format(dateFormat), endDate.Format(dateFormat))
 
 		l := len(m)
 		if l != count {
 			list := make([]bundle.Monthly, count)
 			index := 0
 			for i := 0; i < count; i++ {
-				list[i].Date = startDate.AddDate(0, i, 0)
+				list[i].Date = start.AddDate(0, i, 0)
 				if index < l && list[i].Date.Equal(m[index].Date) {
 					list[i].Sum = m[index].Sum
 					index++
