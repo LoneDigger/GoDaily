@@ -163,6 +163,14 @@
                     </div>
 
                     <div class="row">
+                      <div class="mb-3 col-md-6">
+                        <label for="textField" class="form-label"></label>
+                        <input class="form-control" type="text" id="textField" name="textField" value=""
+                          placeholder="關鍵字" autofocus />
+                      </div>
+                    </div>
+
+                    <div class="row">
                       <div class="mt-2">
                         <button id="inquireBtn" type="submit" class="btn btn-primary me-2">查詢</button>
                       </div>
@@ -231,6 +239,7 @@
     function getList() {
       const startDate = $("#startDate").val();
       const endDate = $("#endDate").val();
+      const content = $("#textField").val();
 
       if (startDate === "" || endDate === "")
         return;
@@ -239,6 +248,7 @@
         params: {
           start: startDate,
           end: endDate,
+          content: content,
         }
       }).then((response) => {
         if (response.data.code === API_OK) {

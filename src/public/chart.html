@@ -166,6 +166,7 @@
                     <div class="row">
                       <div class="mt-2">
                         <button id="getBtn" type="submit" class="btn btn-primary me-2">取得資料</button>
+                        <i id="checkIcon" class="menu-icon bx" style="font-size: 1.6rem;"></i>
                       </div>
                     </div>
                   </div>
@@ -292,6 +293,7 @@
         showToast($(".toast")[0], response.data.code);
 
         if (response.data.code === API_OK) {
+          $("#checkIcon")[0].classList.add("bx-check-double");
           list = response.data.list;
         }
       }).catch((err) => {

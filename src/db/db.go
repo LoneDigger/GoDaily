@@ -57,6 +57,7 @@ func (d *Db) checkSub(userId, subId int) error {
 	if count == 1 {
 		return nil
 	}
+
 	return errors.New(bundle.CodeHold)
 }
 
@@ -331,7 +332,7 @@ func (d *Db) GetItem(userId, itemId int) (bundle.Item, error) {
 
 // 用日期取得預覽項目
 func (d *Db) GetPerviewItemsByDate(userId int, start, end string) ([]bundle.PreviewItem, error) {
-	var items []bundle.PreviewItem
+	items := make([]bundle.PreviewItem, 0)
 
 	s := `SELECT b.id, m.id AS "main_id", m.name AS "main_name", 
 				s.id AS "sub_id", s.name AS "sub_name", b.name, 
@@ -489,6 +490,30 @@ func (d *Db) InsertSubType(userId, mainId int, subName string, increase bool) (i
 	return id, nil
 }
 
+// 模糊搜尋名稱
+func (d *Db) LikeName(userId int, keyword, start, end string) ([]bundle.PreviewItem, error) {
+	items := make([]bundle.PreviewItem, 0)
+
+	s := `SELECT b.id, m.id AS "main_id", m.name AS "main_name", 
+				s.id AS "sub_id", s.name AS "sub_name", b.name, 
+				b.price, s.increase, TO_CHAR(b.date, 'yyyy-mm-dd') AS "date"
+			FROM bills AS b
+			LEFT JOIN sub_types AS s
+			ON b.sub_id=s.id
+			LEFT JOIN main_types AS m
+			ON m.id=s.main_id
+			WHERE b.user_id=$1 AND b.date BETWEEN $2 AND $3 
+				AND b.name LIKE $4 
+			ORDER BY b.date, b.id`
+
+	err := d.db.Select(&items, s, userId, start, end, keyword)
+	if err != nil {
+		err = errors.New(bundle.CodeDb)
+	}
+
+	return items, err
+}
+
 // 登入
 func (d *Db) Login(username string) (int, string, error) {
 	login := struct {
@@ -523,7 +548,6 @@ func (d *Db) UpdateItem(userId, itemId int, name string, subId int, price int, r
 	}
 
 	row, _ := r.RowsAffected()
-
 	if row == 0 {
 		return errors.New(bundle.CodeNoData)
 	}
