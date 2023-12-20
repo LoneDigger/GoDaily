@@ -9,6 +9,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
 	"me.daily/src/bundle"
+	"me.daily/src/fuzzy"
 	"me.daily/src/log"
 	"me.daily/src/token"
 	"me.daily/src/util"
@@ -339,8 +340,8 @@ func (s *Service) getAll(c *gin.Context) {
 	c.JSON(http.StatusOK, b)
 }
 
-// @Summary 取得項目
-// @Description 取得項目
+// @Summary 取得單一項目
+// @Description 取得單一項目
 // @Tags get
 // @Param item_id path int true "項目編號"
 // @Accept json
@@ -371,11 +372,15 @@ func (s *Service) getItem(c *gin.Context) {
 // @Summary 由日期取得預覽項目
 // @Description 由日期取得預覽項目
 // @Tags get
+// @Param start		query string true "起始日期"
+// @Param end		query string true "結束日期"
+// @Param content	query string false "關鍵字"
 // @Accept json
 // @Produce json
 // @Router /api/items [get]
 func (s *Service) getItems(c *gin.Context) {
 	var b bundle.GetItemsResponse
+	b.List = make([]bundle.PreviewItem, 0)
 
 	userId := c.GetInt("user_id")
 	startStr := c.Query("start")
@@ -404,7 +409,7 @@ func (s *Service) getItems(c *gin.Context) {
 	}
 
 	// 查詢區間
-	shiftTime := startDate.AddDate(5, 0, 0)
+	shiftTime := startDate.AddDate(dateRange, 0, 0)
 	if endDate.After(shiftTime) {
 		b.Code = bundle.CodeDate
 		c.Set("code", b.Code)
@@ -558,6 +563,80 @@ func (s *Service) getSubType(c *gin.Context) {
 		} else {
 			b.Code = bundle.CodeOk
 			b.List = sub
+		}
+	}
+
+	c.Set("code", b.Code)
+	c.JSON(http.StatusOK, b)
+}
+
+// @Summary 模糊搜尋名稱
+// @Description 模糊搜尋名稱
+// @Tags get
+// @Param start		query string true "起始日期"
+// @Param end		query string true "結束日期"
+// @Param content	query string true "關鍵字"
+// @Accept json
+// @Produce json
+// @Router /api/search/name [get]
+func (s *Service) searchByName(c *gin.Context) {
+	var b bundle.GetItemsResponse
+	b.List = make([]bundle.PreviewItem, 0)
+
+	userId := c.GetInt("user_id")
+	startStr := c.Query("start")
+	startDate, err := time.Parse(dateFormat, startStr)
+	if err != nil {
+		b.Code = bundle.CodeFormat
+		c.JSON(http.StatusOK, b)
+		return
+	}
+
+	endStr := c.Query("end")
+	endDate, err := time.Parse(dateFormat, endStr)
+	if err != nil {
+		b.Code = bundle.CodeFormat
+		c.Set("code", b.Code)
+		c.JSON(http.StatusOK, b)
+		return
+	}
+
+	// 日期錯誤
+	if startDate.After(endDate) {
+		b.Code = bundle.CodeDate
+		c.Set("code", b.Code)
+		c.JSON(http.StatusOK, b)
+		return
+	}
+
+	// 查詢區間
+	shiftTime := startDate.AddDate(dateRange, 0, 0)
+	if endDate.After(shiftTime) {
+		b.Code = bundle.CodeDate
+		c.Set("code", b.Code)
+		c.JSON(http.StatusOK, b)
+		return
+	}
+
+	var items []bundle.PreviewItem
+	content := c.Query("content")
+	if len(content) == 0 {
+		b.Code = bundle.CodeEmptyContent
+		c.Set("code", b.Code)
+		c.JSON(http.StatusOK, b)
+	} else {
+		items, err = s.d.GetPerviewItemsByDate(userId, startStr, endStr)
+		if err != nil {
+			b.Code = err.Error()
+		} else {
+			b.Code = bundle.CodeOk
+
+			// 過濾內文
+			for _, item := range items {
+				if fuzzy.FuzzySearch(item.Name, content, nil) {
+					b.List = append(b.List, item)
+				}
+			}
 		}
 	}
 

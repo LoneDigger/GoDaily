@@ -1,8 +1,6 @@
 package service
 
 import (
-	"embed"
-	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,37 +10,36 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-// 日期格式
-const dateFormat = "2006-01-02"
-
-// 過期時間
-const expiredTime = 8 * 60 * 60
+const (
+	dateFormat  = "2006-01-02" //日期格式
+	expiredTime = 8 * 60 * 60  //過期時間
+	dateRange   = 5            // 查詢日期區間(年)
+)
 
 type Service struct {
-	a   gin.Accounts
-	c   *cache.Cache
-	d   *db.Db
-	fsh http.Handler
-	s   *gin.Engine
+	a gin.Accounts
+	c *cache.Cache
+	d *db.Db
+	s *gin.Engine
 }
 
-func NewService(host, user, password, dbname, authUser, authPw string, fs embed.FS) *Service {
+func NewService(host, user, password, dbname, authUser, authPw string) *Service {
 	a := make(gin.Accounts)
 	a[authUser] = authPw
 
 	return &Service{
-		a:   a,
-		c:   cache.New(expiredTime*time.Second, 60*time.Minute),
-		d:   db.NewDb(host, user, password, dbname),
-		fsh: http.FileServer(http.FS(fs)),
-		s:   gin.New(),
+		a: a,
+		c: cache.New(expiredTime*time.Second, 60*time.Minute),
+		d: db.NewDb(host, user, password, dbname),
+		s: gin.New(),
 	}
 }
 
 // swag init
-// http://localhost:8080/swagger/index.html
-// go get -u github.com/swaggo/gin-swagger
-// go get -u github.com/swaggo/files
+//
+//	http://localhost:8080/swagger/index.html
+//	go get -u github.com/swaggo/gin-swagger
+//	go get -u github.com/swaggo/files
 func (s *Service) Start() {
 	s.s.RedirectFixedPath = true
 
@@ -67,9 +64,7 @@ func (s *Service) Start() {
 	// s.s.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// static files
-	s.s.Any("/public/*any", func(c *gin.Context) {
-		s.fsh.ServeHTTP(c.Writer, c.Request)
-	})
+	s.s.Static("/public/", "./public/")
 
 	// resource
 	{
@@ -93,8 +88,10 @@ func (s *Service) Start() {
 		gApi.GET("/items", s.getItems)
 		gApi.GET("/spend/month/:count", s.getSpendByLastMonthly)
 		gApi.GET("/sum/main", s.getSumByMainType)
+		gApi.GET("/search/name", s.searchByName)
+		gApi.GET("/search/remake")
 
-		gApi.GET("logout", s.logout)
+		gApi.GET("/logout", s.logout)
 		gApi.POST("/login", s.login)
 		gApi.POST("/user", s.createUser)
 		gApi.POST("/main", s.createMainType)

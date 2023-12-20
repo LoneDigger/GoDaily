@@ -160,37 +160,50 @@
             <div class="row">
               <div class="col-md-12">
                 <div class="card mb-4">
-                  <h5 class="card-header">子類別</h5>
+                  <h5 class="card-header">模糊搜尋名稱</h5>
                   <hr class="my-0" />
                   <div class="card-body">
                     <div class="row">
                       <div class="mb-3 col-md-6">
-                        <select id="mainTypeSelect" class="select2 form-select">
-                        </select>
+                        <label for="dateInput" class="form-label">起始日期</label>
+                        <input id="startDate" class="form-control" type="date" />
                       </div>
                       <div class="mb-3 col-md-6">
-                        <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" id="increaseCheckbox" />
-                          <label class="form-check-label" for="increaseCheckbox">收入</label>
-                        </div>
+                        <label for="dateInput" class="form-label">結束日期</label>
+                        <input id="endDate" class="form-control" type="date" />
                       </div>
                     </div>
+
                     <div class="row">
                       <div class="mb-3 col-md-6">
-                        <label class="form-label"></label>
-                        <select id="subTypeSelect" class="select2 form-select">
-                        </select>
-                      </div>
-                      <div class="mb-3 col-md-6">
                         <label for="textField" class="form-label"></label>
-                        <input class="form-control" type="text" id="textField" name="textField" value="" autofocus />
+                        <input class="form-control" type="text" id="textField" name="textField" value=""
+                          placeholder="關鍵字" autofocus />
                       </div>
                     </div>
-                    <div class="mt-2">
-                      <button id="addBtn" type="submit" class="btn btn-primary me-2">新增</button>
-                      <button id="updateBtn" type="submit" class="btn btn-primary me-2">修改</button>
-                      <button id="deleteBtn" type="reset" class="btn btn-outline-secondary">刪除</button>
+
+                    <div class="row">
+                      <div class="mt-2">
+                        <button id="inquireBtn" type="submit" class="btn btn-primary me-2">查詢</button>
+                      </div>
                     </div>
+                  </div>
+
+                  <div class="table-responsive text-nowrap">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>日期</th>
+                          <th>主類別名稱</th>
+                          <th>子類別名稱</th>
+                          <th>項目名稱</th>
+                          <th>價格</th>
+                          <th>編輯</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tableItem" class="table-border-bottom-0">
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -198,22 +211,16 @@
           </div>
           <!-- / Content -->
 
-          <!-- Footer -->
-          <footer class="content-footer footer bg-footer-theme">
-            <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
-            </div>
-          </footer>
-          <!-- / Footer -->
-
           <div class="content-backdrop fade"></div>
         </div>
-        <!-- Content wrapper -->
       </div>
-      <!-- / Layout page -->
+      <!-- Content wrapper -->
     </div>
+    <!-- / Layout page -->
+  </div>
 
-    <!-- Overlay -->
-    <div class="layout-overlay layout-menu-toggle"></div>
+  <!-- Overlay -->
+  <div class="layout-overlay layout-menu-toggle"></div>
   </div>
   <!-- / Layout wrapper -->
 
@@ -228,6 +235,7 @@
   <!-- endbuild -->
 
   <!-- Vendors JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.41.1/apexcharts.min.js"></script>
 
   <!-- Main JS -->
   <script src="./assets/js/main.js"></script>
@@ -238,132 +246,70 @@
   <script src="./assets/js/api.js"></script>
 
   <script>
-    var optionsMain = new Map();
-    var optionsSub = new Map();
+    var list;
 
-    // 建立子類別
-    function createSubType() {
-      const mainStr = $('#mainTypeSelect').find(":selected").val();
-      const mainId = parseInt(mainStr);
-      const text = $('#textField').val();
-      const form = {
-        "increase": $("#increaseCheckbox").prop('checked'),
-        "main_id": mainId,
-        "name": text,
-      };
+    function getList() {
+      const startDate = $("#startDate").val();
+      const endDate = $("#endDate").val();
+      const content = $("#textField").val();
 
-      const json = JSON.stringify(form);
-      postRequset("/api/sub", json).then((response) => {
-        showToast($(".toast")[0], response.data.code);
+      if (startDate === "" || endDate === "")
+        return;
 
-        if (response.data.code === API_OK) {
-          optionsSub.set(response.data.sub_id, {
-            name: form.name,
-            increase: form.increase,
-          });
-          updateView("#subTypeSelect", optionsSub);
+      getRequset("/api/search/name", {
+        params: {
+          start: startDate,
+          end: endDate,
+          content: content,
         }
-      }).catch((err) => {
-        showToast($(".toast")[0], err.code);
-      });
-    }
-
-    // 更新子類別
-    function updateSubType() {
-      const subStr = $('#subTypeSelect').find(":selected").val();
-      const subId = parseInt(subStr);
-      const text = $('#textField').val();
-      const form = {
-        "sub_id": subId,
-        "name": text,
-        "increase": $("#increaseCheckbox").prop('checked'),
-      };
-
-      const json = JSON.stringify(form);
-      putRequset("/api/sub", json).then((response) => {
-        showToast($(".toast")[0], response.data.code);
-
+      }).then((response) => {
         if (response.data.code === API_OK) {
-          optionsSub.set(subId, {
-            name: form.name,
-            increase: form.increase,
-          });
-          updateView("#subTypeSelect", optionsSub);
-        }
-      }).catch((err) => {
-        showToast($(".toast")[0], err.code);
-      });
-    }
+          let html = "";
 
-    // 取得主類別
-    function getMainType() {
-      getRequset("/api/main").then((response) => {
-        if (response.data.code === API_OK) {
-          optionsMain.clear();
+          list = response.data.list;
+          for (var i = 0; i < list.length; i++) {
+            const item = list[i];
 
-          for (var i = 0; i < response.data.list.length; i++) {
-            const item = response.data.list[i];
-            optionsMain.set(item.id, {
-              name: item.name,
-            });
+            html += "<tr>";
+
+            html += "<td>";
+            html += item.date;
+            html += "</td>";
+
+            html += "<td>";
+            html += item.main_name;
+            html += "</td>";
+
+            html += "<td>";
+            html += item.sub_name;
+            html += "</td>";
+
+            html += "<td>";
+            html += item.name;
+            html += "</td>";
+
+            html += "<td>";
+            html += item.price;
+            html += "</td>";
+
+            const url = "/public/item.html#" + item.id;
+
+            html += "<td>";
+            html += '<div class="dropdown">';
+            html += '<button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">';
+            html += '<i class="bx bx-dots-vertical-rounded"></i></button>';
+            html += '<div class="dropdown-menu">';
+            html += '<a class="dropdown-item" href="' + url + '"><i class="bx bx-edit-alt me-1"></i>Edit</a>';
+            html += '</div></div>';
+            html += "</td>";
+
+            html += "</tr>";
           }
 
-          updateView("#mainTypeSelect", optionsMain);
+          const tableItem = document.querySelector("#tableItem");
+          tableItem.innerHTML = html;
         } else {
           showToast($(".toast")[0], response.data.code);
-        }
-      }).catch((err) => {
-        showToast($(".toast")[0], err.code);
-      });
-    }
-
-    // 取得子類別
-    function getSubType(subId) {
-      getRequset("/api/sub/" + subId).then((response) => {
-        if (response.data.code === API_OK) {
-          optionsSub.clear();
-
-          for (var i = 0; i < response.data.list.length; i++) {
-            const item = response.data.list[i];
-            optionsSub.set(item.id, {
-              name: item.name,
-              increase: item.increase,
-            });
-          }
-
-          updateView("#subTypeSelect", optionsSub);
-        } else {
-          showToast($(".toast")[0], response.data.code);
-        }
-      }).catch((err) => {
-        showToast($(".toast")[0], err.code);
-      });
-    }
-
-    function updateView(name, options) {
-      $('#textField').val("");
-      $(name).empty();
-      $(name).append('<option selected disabled hidden>選擇</option>');
-
-      for (let [key, value] of options) {
-        $(name).append($('<option>', {
-          value: key,
-          text: value.name,
-        }));
-      }
-    }
-
-    // 刪除子類別
-    function deleteSubType() {
-      const subStr = $('#subTypeSelect').find(":selected").val();
-      const subId = parseInt(subStr);
-
-      deleteRequset("/api/sub/" + subId).then((response) => {
-        showToast($(".toast")[0], response.data.code);
-
-        if (response.data.code === API_OK) {
-          optionsSub.delete(subId);
-          updateView("#subTypeSelect", optionsSub);
         }
       }).catch((err) => {
         showToast($(".toast")[0], err.code);
@@ -371,36 +317,9 @@
     }
 
     $(document).ready(function () {
-      $("#addBtn").click(function () {
-        createSubType();
+      $("#inquireBtn").click(function () {
+        getList();
       });
-
-      $("#updateBtn").click(function () {
-        updateSubType();
-      });
-
-      $("#deleteBtn").click(function () {
-        deleteSubType();
-      });
-
-      $('#mainTypeSelect').on('change', function () {
-        $('#mainTypeSelect option:selected').each(function () {
-          const subId = $(this).val();
-          getSubType(subId);
-        });
-      });
-
-      $('#subTypeSelect').on('change', function () {
-        $('#subTypeSelect option:selected').each(function () {
-          const subId = parseInt($(this).val());
-          const item = optionsSub.get(subId);
-
-          $("#increaseCheckbox").prop('checked', item.increase);
-          $("#textField").val(item.name);
-        });
-      });
-
-      getMainType();
     });
   </script>
 
