@@ -1,6 +1,8 @@
 package service
 
 import (
+	"embed"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,21 +19,23 @@ const (
 )
 
 type Service struct {
-	a gin.Accounts
-	c *cache.Cache
-	d *db.Db
-	s *gin.Engine
+	a   gin.Accounts
+	c   *cache.Cache
+	d   *db.Db
+	fsh http.Handler
+	s   *gin.Engine
 }
 
-func NewService(host, user, password, dbname, authUser, authPw string) *Service {
+func NewService(host, user, password, dbname, authUser, authPw string, fs embed.FS) *Service {
 	a := make(gin.Accounts)
 	a[authUser] = authPw
 
 	return &Service{
-		a: a,
-		c: cache.New(expiredTime*time.Second, 60*time.Minute),
-		d: db.NewDb(host, user, password, dbname),
-		s: gin.New(),
+		a:   a,
+		c:   cache.New(expiredTime*time.Second, 60*time.Minute),
+		d:   db.NewDb(host, user, password, dbname),
+		fsh: http.FileServer(http.FS(fs)),
+		s:   gin.New(),
 	}
 }
 
@@ -64,7 +68,9 @@ func (s *Service) Start() {
 	// s.s.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// static files
-	s.s.Static("/public/", "./public/")
+	s.s.Any("/public/*any", func(c *gin.Context) {
+		s.fsh.ServeHTTP(c.Writer, c.Request)
+	})
 
 	// resource
 	{
