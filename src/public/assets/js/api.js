@@ -108,6 +108,11 @@ function showToast(toast, code) {
       msg = "更新失敗";
       break;
 
+    case "E-020":
+      name = "bg-danger";
+      msg = "請輸入鍵字";
+      break;
+
     default:
       name = "bg-danger";
       msg = code;

@@ -3,19 +3,20 @@ package bundle
 import "time"
 
 var (
-	CodeOk         = "E-000"
-	CodeFormat     = "E-001" // 格式錯誤
-	CodeDb         = "E-002" // 資料庫
-	CodeLogin      = "E-003" // 尚未登入
-	CodeUsername   = "E-011" // 使用者名稱錯誤
-	CodePassword   = "E-012" // 密碼錯誤
-	CodeToken      = "E-013" // 授權碼錯誤
-	CodeUserRepeat = "E-014" // 帳號重複
-	CodeHold       = "E-015" // 不是你的
-	CodeDate       = "E-016" // 查詢日期錯誤
-	CodeCache      = "E-017" // 快取沒資料
-	CodeTypeRepeat = "E-018" // 類別名稱重複
-	CodeNoData     = "E-019" // 沒有資料
+	CodeOk           = "E-000"
+	CodeFormat       = "E-001" // 格式錯誤
+	CodeDb           = "E-002" // 資料庫
+	CodeLogin        = "E-003" // 尚未登入
+	CodeUsername     = "E-011" // 使用者名稱錯誤
+	CodePassword     = "E-012" // 密碼錯誤
+	CodeToken        = "E-013" // 授權碼錯誤
+	CodeUserRepeat   = "E-014" // 帳號重複
+	CodeHold         = "E-015" // 不是你的
+	CodeDate         = "E-016" // 查詢日期錯誤
+	CodeCache        = "E-017" // 快取沒資料
+	CodeTypeRepeat   = "E-018" // 類別名稱重複
+	CodeNoData       = "E-019" // 沒有資料
+	CodeEmptyContent = "E-020" // 沒有輸入關鍵字
 )
 
 // 全部類型
