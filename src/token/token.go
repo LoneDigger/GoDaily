@@ -45,5 +45,6 @@ func PareToken(token string) (*Claims, error) {
 			return claim, nil
 		}
 	}
+
 	return nil, err
 }
