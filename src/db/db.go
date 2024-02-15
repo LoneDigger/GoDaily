@@ -273,7 +273,8 @@ func (d *Db) GetAllType(userId int) ([]bundle.AllType, error) {
 			FROM main_types AS m
 			LEFT JOIN sub_types AS s
 			ON m.id=s.main_id
-			WHERE m.user_id=$1 AND s.user_id=$1
+			WHERE m.user_id=$1 AND s.user_id=$1 
+				AND NOT m.deleted AND NOT s.deleted
 			ORDER BY main_id, sub_id`
 	err := d.db.Select(&arr, s, userId)
 	if err != nil {
