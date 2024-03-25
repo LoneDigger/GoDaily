@@ -5,7 +5,7 @@ import (
 )
 
 // 比對密碼
-// https://gowebexamples.com/password-hashing/
+//	https://gowebexamples.com/password-hashing/
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
