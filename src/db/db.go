@@ -99,12 +99,12 @@ func (d *Db) checkMainTypeOwner(userId, mainId int) error {
 }
 
 // 確認子類別名稱有無重複
-func (d *Db) checkSubTypeName(userId int, name string) error {
+func (d *Db) checkSubTypeName(userId, mainId int, name string) error {
 	s := `SELECT COUNT(1)
 			FROM sub_types
-            WHERE user_id=$1 AND name=$2 AND NOT deleted`
+            WHERE user_id=$1 AND name=$2 AND main_id=$3 AND NOT deleted`
 	count := 0
-	err := d.db.QueryRow(s, userId, name).Scan(&count)
+	err := d.db.QueryRow(s, userId, name, mainId).Scan(&count)
 	if err != nil {
 		return errors.New(bundle.CodeDb)
 	}
@@ -136,7 +136,7 @@ func createMain(tx *sqlx.Tx, userId int) ([]int, error) {
 }
 
 // 建立子類別
-func createSub(tx *sqlx.Tx, userId int, mainIds []int) error {
+func createSub(tx *sqlx.Tx, mainIds []int) error {
 	type tmp struct {
 		UserId   int `db:"user_id"`
 		MainId   int `db:"main_id"`
@@ -196,7 +196,7 @@ func (d *Db) CreateUser(username, password string) (int, error) {
 			return -1, err
 		}
 
-		if err = createSub(tx, userId, mainIds); err != nil {
+		if err = createSub(tx, mainIds); err != nil {
 			return -1, err
 		}
 
@@ -469,7 +469,7 @@ func (d *Db) InsertSubType(userId, mainId int, subName string, increase bool) (i
 		return 0, err
 	}
 
-	err = d.checkSubTypeName(userId, subName)
+	err = d.checkSubTypeName(userId, mainId, subName)
 	if err != nil {
 		return 0, err
 	}
@@ -582,9 +582,20 @@ func (d *Db) UpdateMainType(userId, id int, name string) error {
 
 // 更新子類型
 func (d *Db) UpdateSubType(userId, subId int, name string, increase bool) error {
-	err := d.checkSubTypeName(userId, name)
+	s := `SELECT main_id 
+			FROM sub_types 
+			WHERE user_id=$1 AND sub_id=$2`
+
+	var mainId int
+	err := d.db.QueryRow(s,
+		userId, subId).Scan(&mainId)
 	if err != nil {
-		return err
+		return errors.New(bundle.CodeDb)
+	}
+
+	err = d.checkSubTypeName(userId, mainId, name)
+	if err != nil {
+		return errors.New(bundle.CodeDb)
 	}
 
 	i := -1
@@ -592,7 +603,7 @@ func (d *Db) UpdateSubType(userId, subId int, name string, increase bool) error 
 		i = 1
 	}
 
-	s := `UPDATE sub_types
+	s = `UPDATE sub_types
 			SET name=$1, increase=$2
 			WHERE id=$3 AND user_id=$4`
 	r, err := d.db.Exec(s, name, i, subId, userId)
