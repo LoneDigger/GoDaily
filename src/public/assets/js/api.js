@@ -98,6 +98,11 @@ function showToast(toast, code) {
       msg = "該帳號已被註冊";
       break;
 
+    case "E-016":
+      name = "bg-danger";
+      msg = "日期錯誤";
+      break;
+
     case "E-018":
       name = "bg-danger";
       msg = "名稱已重複";
