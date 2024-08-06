@@ -18,6 +18,7 @@ var Nop = transform.Nop
 var Fold = unicodeFoldTransformer{}
 
 // Unicode 等價性
+//
 //	https://learnku.com/docs/go-blog/normalization/6554
 var Normalized = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 

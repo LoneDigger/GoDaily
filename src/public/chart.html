@@ -289,6 +289,20 @@
     // 主類別名稱
     const mainTypeName = new Map();
 
+    function formatToday() {
+      var d = new Date(),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+      if (month.length < 2)
+        month = '0' + month;
+      if (day.length < 2)
+        day = '0' + day;
+
+      return [year, month, day].join('-');
+    }
+
     function getList() {
       const startDate = $("#startDate").val();
       const endDate = $("#endDate").val();
@@ -446,6 +460,10 @@
     }
 
     $(document).ready(function () {
+      const date = formatToday()
+      $("#startDate").val(date);
+      $("#endDate").val(date);
+
       getAllType();
 
       $("#getBtn").click(function () {
